@@ -46,11 +46,20 @@ def check_internet():
 
 
 def check_file(file):
-    """ return true if parameter is file """
+    """ return true if argument is file """
     if os.path.isfile(file):
         return True
     else:
         sg.popup("File Not Found!")
+        return False
+
+
+def check_file_extension(file):
+    """ returns true if argument has a .wav extension """
+    if file.lower().endswith(".wav"):
+        return True
+    else:
+        sg.popup("The File Type Is Not .wav!")
         return False
 
 
@@ -91,7 +100,7 @@ while check_internet():
         break
 
     # check a user input if input is file/path
-    if event == "Convert" and check_file(values["File"]):
+    if (event == "Convert" and check_file(values["File"])) and check_file_extension(values["File"]):
         convert_to_text = audio_to_text(values["File"])
         text_translate = language_translate(convert_to_text)
         allowed = True
