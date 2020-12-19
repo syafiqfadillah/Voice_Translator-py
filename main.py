@@ -6,7 +6,7 @@ import PySimpleGUI as sg
 import speech_recognition as sr
 
 
-def language_translate(text, lang="id"):
+def language_translate(text, lang):
     """ returns the text after it is translated """
     translator = googletrans.Translator()
     lang_convert = translator.translate(text, dest=lang)
@@ -62,6 +62,19 @@ def check_file_extension(file):
         sg.popup("The File Type Is Not .wav!")
         return False
 
+def languages():
+    """ returns a list of languages"""
+    lang = googletrans.LANGUAGES
+
+    new_keys = {}
+    for keys in lang:
+
+        # set up a new keys and values
+        new_keys[lang[keys]] = keys 
+
+    list_keys = list(new_keys.keys())
+
+    return list_keys
 
 def layout():
     # audio column for layout
@@ -73,11 +86,17 @@ def layout():
         [sg.Button("Voice", size=(17, 0))],
     ]
 
+    all_lang = languages()
+
+    # language column for layout 
+    language_column = [[sg.Text("To : ", size=(10, 0))], [sg.Combo(all_lang, key="Languages", size=(10, 5))]]
+
     # result column for layout
     result_column = [[sg.Output(size=(20, 10))]]
 
     # layout for window
-    layout = [[sg.Column(audio_column), sg.VerticalSeparator(), sg.Column(result_column)]]
+    layout = [[sg.Column(audio_column), sg.VerticalSeparator(), 
+               sg.Column(language_column), sg.VerticalSeparator(), sg.Column(result_column)]]
 
     # return window
     return sg.Window("Voice Translate", layout)
@@ -102,7 +121,7 @@ while check_internet():
     # check a user input if input is file/path
     if (event == "Convert" and check_file(values["File"])) and check_file_extension(values["File"]):
         convert_to_text = audio_to_text(values["File"])
-        text_translate = language_translate(convert_to_text)
+        text_translate = language_translate(convert_to_text, values["Languages"])
         allowed = True
 
     if event == "Text" and allowed:
