@@ -1,5 +1,6 @@
 import os
-import pyttsx3
+import gtts
+import playsound
 import requests
 import googletrans
 import PySimpleGUI as sg
@@ -24,12 +25,10 @@ def audio_to_text(audio):
     return recognizer.recognize_google(audio)
 
 
-def text_to_audio(text):
+def text_to_audio(text, lang, audio_name):
     """ convert text into voice """
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
-    engine.stop()
+    convert_text = gtts.gTTS(text=text, lang=lang, slow=True)
+    convert_text.save(f"{audio_name}.mp3")
 
 
 def check_internet():
@@ -62,45 +61,59 @@ def check_file_extension(file):
         sg.popup("The File Type Is Not .wav!")
         return False
 
+
 def languages():
-    """ returns a list of languages"""
+    """ returns a dict of languages"""
     lang = googletrans.LANGUAGES
 
-    new_keys = {}
-    for keys in lang:
+    # set up new keys
+    new_keys = dict(map(reversed, lang.items()))
 
-        # set up a new keys and values
-        new_keys[lang[keys]] = keys 
+    return new_keys
 
-    list_keys = list(new_keys.keys())
 
-    return list_keys
+def play_audio(audio_name):
+    """ play audio after it is translated """
+    playsound.playsound(f"{audio_name}.mp3")
+
 
 def layout():
-    # audio column for layout
-    audio_column = [
+
+    list_languages = list(all_lang.keys())
+
+    # setting column for layout
+    setting_column = [
+        [sg.Text("File Path : ", size=(20, 0))],
         [sg.InputText(key="File", size=(20, 0))],
         [sg.FileBrowse(target="File", size=(17, 0))],
-        [sg.Button("Convert", size=(17, 0))],
-        [sg.Button("Text", size=(17, 0))],
-        [sg.Button("Voice", size=(17, 0))],
+        [sg.Text("Audio Name : ", size=(20, 0))], 
+        [sg.InputText(key="AudioName", size=(20, 0))],
+        [sg.Text("Languages : ", size=(10, 0))], 
+        [sg.Combo(list_languages, key="Languages", size=(10, 5))],
     ]
 
-    all_lang = languages()
-
-    # language column for layout 
-    language_column = [[sg.Text("To : ", size=(10, 0))], [sg.Combo(all_lang, key="Languages", size=(10, 5))]]
+    # convert column for layout 
+    convert_column = [
+        [sg.Text("First Convert : ")],
+        [sg.Button("Convert", size=(17, 0))],
+        [sg.Text("Convert To Text : ")],
+        [sg.Button("Text", size=(17, 0))],
+        [sg.Text("Convert To Audio : ")],
+        [sg.Button("Voice", size=(17, 0))]
+    ]
 
     # result column for layout
     result_column = [[sg.Output(size=(20, 10))]]
 
     # layout for window
-    layout = [[sg.Column(audio_column), sg.VerticalSeparator(), 
-               sg.Column(language_column), sg.VerticalSeparator(), sg.Column(result_column)]]
+    create_layout = [[sg.Column(setting_column), sg.VerticalSeparator(), 
+                      sg.Column(convert_column), sg.VerticalSeparator(), sg.Column(result_column)]]
 
     # return window
-    return sg.Window("Voice Translate", layout)
+    return sg.Window("Voice Translate", create_layout)
 
+
+all_lang = languages()
 
 # create window
 window = layout()
@@ -115,7 +128,7 @@ while check_internet():
     event, values = window.Read()
 
     # application closed if user click exit
-    if event == "Exit" or event == sg.WIN_CLOSED:
+    if event in ("Exit", sg.WIN_CLOSED):
         break
 
     # check a user input if input is file/path
@@ -130,7 +143,8 @@ while check_internet():
 
     if event == "Voice" and allowed:
         # convert text after translate to voice and return it
-        text_to_audio(text_translate)
+        text_to_audio(text_translate, all_lang[values["Languages"]], values["AudioName"])
+        play_audio(values["AudioName"])
 
 # close application
 window.close()
