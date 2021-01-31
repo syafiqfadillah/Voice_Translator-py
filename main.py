@@ -77,9 +77,9 @@ def play_audio(audio_name):
     playsound.playsound(f"{audio_name}.mp3")
 
 
-def layout():
+def layout(languages):
 
-    list_languages = list(all_lang.keys())
+    list_languages = list(languages.keys())
 
     # setting column for layout
     setting_column = [
@@ -109,14 +109,13 @@ def layout():
     create_layout = [[sg.Column(setting_column), sg.VerticalSeparator(), 
                       sg.Column(convert_column), sg.VerticalSeparator(), sg.Column(result_column)]]
 
-    # return window
     return sg.Window("Voice Translate", create_layout)
 
 
 all_lang = languages()
 
 # create window
-window = layout()
+window = layout(all_lang)
 
 # flag for check file
 allowed = False
@@ -124,7 +123,6 @@ allowed = False
 # application loop
 while check_internet():
 
-    # read/get window event and values
     event, values = window.Read()
 
     # application closed if user click exit
@@ -132,19 +130,19 @@ while check_internet():
         break
 
     # check a user input if input is file/path
-    if (event == "Convert" and check_file(values["File"])) and check_file_extension(values["File"]):
-        convert_to_text = audio_to_text(values["File"])
-        text_translate = language_translate(convert_to_text, values["Languages"])
+    elif (event == "Convert" and check_file(values.get("File"))) and check_file_extension(values.get("File")):
+        convert_to_text = audio_to_text(values.get("File"))
+        text_translate = language_translate(convert_to_text, values.get("Languages"))
         allowed = True
 
-    if event == "Text" and allowed:
+    elif event == "Text" and allowed:
         # show text after translate
         print(text_translate)
 
-    if event == "Voice" and allowed:
+    elif event == "Voice" and allowed:
         # convert text after translate to voice and return it
-        text_to_audio(text_translate, all_lang[values["Languages"]], values["AudioName"])
-        play_audio(values["AudioName"])
+        text_to_audio(text_translate, all_lang.get(values.get("Languages")), values.get("AudioName"))
+        play_audio(values.get("AudioName"))
 
 # close application
 window.close()
