@@ -81,7 +81,6 @@ def layout(languages):
 
     list_languages = list(languages.keys())
 
-    # setting column for layout
     setting_column = [
         [sg.Text("File Path : ", size=(20, 0))],
         [sg.InputText(key="File", size=(20, 0))],
@@ -92,7 +91,6 @@ def layout(languages):
         [sg.Combo(list_languages, key="Languages", size=(10, 5))],
     ]
 
-    # convert column for layout 
     convert_column = [
         [sg.Text("First Convert : ")],
         [sg.Button("Convert", size=(17, 0))],
@@ -102,10 +100,8 @@ def layout(languages):
         [sg.Button("Voice", size=(17, 0))]
     ]
 
-    # result column for layout
     result_column = [[sg.Output(size=(20, 10))]]
 
-    # layout for window
     create_layout = [[sg.Column(setting_column), sg.VerticalSeparator(), 
                       sg.Column(convert_column), sg.VerticalSeparator(), sg.Column(result_column)]]
 
@@ -114,35 +110,27 @@ def layout(languages):
 
 all_lang = languages()
 
-# create window
 window = layout(all_lang)
 
-# flag for check file
 allowed = False
 
-# application loop
 while check_internet():
 
     event, values = window.Read()
 
-    # application closed if user click exit
     if event in ("Exit", sg.WIN_CLOSED):
         break
 
-    # check a user input if input is file/path
     elif (event == "Convert" and check_file(values.get("File"))) and check_file_extension(values.get("File")):
         convert_to_text = audio_to_text(values.get("File"))
         text_translate = language_translate(convert_to_text, values.get("Languages"))
         allowed = True
 
     elif event == "Text" and allowed:
-        # show text after translate
         print(text_translate)
 
     elif event == "Voice" and allowed:
-        # convert text after translate to voice and return it
         text_to_audio(text_translate, all_lang.get(values.get("Languages")), values.get("AudioName"))
         play_audio(values.get("AudioName"))
 
-# close application
 window.close()
